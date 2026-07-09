@@ -150,3 +150,35 @@ python experiments/train_v37.py --cond vanilla --steps 1500 --seq 512
 
 数据: minimind pretrain (open_ash_voc 分词, VOCAB=23005)
 环境: PyTorch 2.x + CUDA + fla + jieba
+
+
+---
+
+# Part II: Stable Rank Collapse 预警 Grokking(领先 3000 步)
+
+## 发现
+
+在 Modular Addition(p=113)上高频采样(每 10 步), stable rank 从 ~25 塌缩到 ~8 的时刻,
+**稳定领先 test accuracy 从 0 跳到 1(grokking)约 3100-3300 步**(2 种子一致)。
+
+| seed | rank 塌缩步 | grok 步 | 领先 |
+|------|-----------|--------|------|
+| 0 | 2090 | 5410 | **-3320 步** |
+| 1 | 3980 | 7110 | **-3130 步** |
+
+rank 塌缩是 grokking 的**必要前置条件**(3/3 种子都塌缩), 但非充分(1/3 塌缩后未 grok)。
+
+## 为什么 rank 领先而 ppl/loss 不能
+
+记忆态 train loss 已≈0, val ppl 是渐变无尖信号, K_int=C*V 因 V→0 而归零。只有 stable rank
+有**相变式塌缩**(25→8), 提供可检测的尖锐早期信号, 且仅需权重(不需 val 集)。
+
+## I_v2 定义
+
+I_v2 = (stable_rank + V) / (H_env * ln2)
+
+记忆态: I_v2 ≈ 7-10 | 压缩期: I_v2 ≈ 2-6(预警区) | 泛化态: I_v2 ≈ 1-2
+
+**I_v2 从 ~8 降到 ~2 的时刻, 领先 grokking ~3000 步。**
+
+详见 RANK_COLLAPSE_PREDICTION.md。
