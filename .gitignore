@@ -1,0 +1,10 @@
+﻿*.pth
+*.pt
+*.bin
+__pycache__/
+*.pyc
+*.err
+*.log
+*.pid
+open_ash_voc_agent.json
+vocabulary_nnn.json
